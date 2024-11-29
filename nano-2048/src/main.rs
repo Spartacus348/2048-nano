@@ -1,6 +1,7 @@
-use rand::prelude::SliceRandom;
-use rand::rngs::ThreadRng;
-use rand::thread_rng;
+use rand::{
+    prelude::SliceRandom,
+    rngs::ThreadRng,
+    thread_rng};
 use std::io;
 use std::io::{Error, ErrorKind};
 use std::ops::Range;
