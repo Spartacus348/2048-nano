@@ -1,10 +1,10 @@
-use rand::{prelude::SliceRandom, rngs::ThreadRng, thread_rng};
+use tinyrand::{StdRand, RandRange, Wyrand};
 use std::io::{stdin, Error, ErrorKind};
 use std::ops::Range;
 
 fn main() {
     println!("Hello, world!");
-    let mut gen = thread_rng();
+    let mut gen = StdRand::default();
     let mut grid = init_grid(&mut gen);
     display_grid(&mut grid);
     while let Ok(x) = turn(&mut grid, &mut gen) {
@@ -13,7 +13,7 @@ fn main() {
     println!("Good game!");
 }
 
-fn turn(grid: &mut Grid, gen: &mut ThreadRng) -> Result<u32, Error> {
+fn turn(grid: &mut Grid, gen: &mut Wyrand) -> Result<u32, Error> {
     let direction = read_input()?;
     let merged: bool = step(grid, &direction);
     if get_empty_coords(grid).is_empty() {
@@ -256,14 +256,17 @@ fn get_empty_coords(grid: &Grid) -> Vec<Coord> {
     coords
 }
 
-fn add_new_cells(grid: &mut Grid, num: usize, gen: &mut ThreadRng) {
+fn add_new_cells(grid: &mut Grid, num: usize, gen: &mut Wyrand) {
     let options = get_empty_coords(grid);
-    for new_idx in options.choose_multiple(gen, num) {
-        put_val(grid, new_idx, 1);
+    for _ in 0..num {
+        let new_idx = gen.next_range(0..options.len());
+        if let Some(cell) = options.get(new_idx) {
+            put_val(grid, cell, 1);
+        }
     }
 }
 
-fn init_grid(gen: &mut ThreadRng) -> Grid {
+fn init_grid(gen: &mut Wyrand) -> Grid {
     let mut grid = [[0; DIM]; DIM];
     add_new_cells(&mut grid, 2, gen);
     grid
