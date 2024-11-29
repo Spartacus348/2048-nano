@@ -2,8 +2,7 @@ use rand::{
     prelude::SliceRandom,
     rngs::ThreadRng,
     thread_rng};
-use std::io;
-use std::io::{Error, ErrorKind};
+use std::io::{stdin, Error, ErrorKind};
 use std::ops::Range;
 
 fn main() {
@@ -19,12 +18,12 @@ fn main() {
 
 fn turn(grid: &mut Grid, gen: &mut ThreadRng) -> Result<u32, Error> {
     let direction = read_input()?;
-    step(grid, &direction);
+    let merged: bool = step(grid, &direction);
     if get_empty_coords(grid).is_empty() {
         println!("Error: No more empty squares");
         return Err(Error::new(ErrorKind::Other, "No valid moves"));
     }
-    add_new_cells(grid, N_NEW_SQUARES, gen);
+    if merged{ add_new_cells(grid, N_NEW_SQUARES, gen);}
     display_grid(grid);
     let base: u32 = 2;
     Ok(grid
@@ -90,7 +89,7 @@ fn read_input() -> Result<Direction, Error> {
         println!("Please input the move (w,a,s,d, x to exit):");
         let mut input = String::new();
 
-        io::stdin()
+        stdin()
             .read_line(&mut input)
             .expect("Failed to read line");
 
@@ -153,9 +152,9 @@ fn merge_ability(mover: UVal, target: UVal) -> MoveResult {
     }
 }
 
-fn merge_cells(mut grid: &mut Grid, move_idx: Coord, tgt_idx: Coord, direction: &Direction) {
+fn merge_cells(mut grid: &mut Grid, move_idx: Coord, tgt_idx: Coord, direction: &Direction) -> bool{
     if !move_idx.on_board() || !tgt_idx.on_board() {
-        return;
+        return false;
     }
 
     let mover_cell = get_val(grid, &move_idx);
@@ -165,18 +164,24 @@ fn merge_cells(mut grid: &mut Grid, move_idx: Coord, tgt_idx: Coord, direction: 
         MoveResult::Merged => {
             put_val(grid, &move_idx, 0);
             put_val(grid, &tgt_idx, target_cell + 1);
+            true
         }
         MoveResult::Through => {
             put_val(grid, &tgt_idx, mover_cell);
             put_val(grid, &move_idx, 0);
             let new_tgt_idx = tgt_idx.neighbor(direction);
             merge_cells(&mut grid, tgt_idx, new_tgt_idx, direction);
+            true
         }
-        _ => {}
+        _ => {
+            false
+        }
     }
 }
 
-fn step(mut grid: &mut Grid, direction: &Direction) {
+fn step(mut grid: &mut Grid, direction: &Direction) -> bool
+{
+    let mut merged = false;
     match direction {
         Direction::Up => {
             for y in AXES {
@@ -186,7 +191,7 @@ fn step(mut grid: &mut Grid, direction: &Direction) {
                         y: y as IVal,
                     };
                     let tgt_idx = move_idx.neighbor(direction);
-                    merge_cells(&mut grid, move_idx, tgt_idx, direction);
+                    merged |= merge_cells(&mut grid, move_idx, tgt_idx, direction);
                 }
             }
         }
@@ -198,7 +203,8 @@ fn step(mut grid: &mut Grid, direction: &Direction) {
                         y: y as IVal,
                     };
                     let tgt_idx = move_idx.neighbor(direction);
-                    merge_cells(&mut grid, move_idx, tgt_idx, direction);
+                    merged |= merge_cells(&mut grid, move_idx, tgt_idx, direction);
+
                 }
             }
         }
@@ -210,7 +216,7 @@ fn step(mut grid: &mut Grid, direction: &Direction) {
                         y: y as IVal,
                     };
                     let tgt_idx = move_idx.neighbor(direction);
-                    merge_cells(&mut grid, move_idx, tgt_idx, direction);
+                    merged |= merge_cells(&mut grid, move_idx, tgt_idx, direction);
                 }
             }
         }
@@ -222,11 +228,12 @@ fn step(mut grid: &mut Grid, direction: &Direction) {
                         y: y as IVal,
                     };
                     let tgt_idx = move_idx.neighbor(direction);
-                    merge_cells(&mut grid, move_idx, tgt_idx, direction);
+                    merged |= merge_cells(&mut grid, move_idx, tgt_idx, direction);
                 }
             }
         }
     }
+    merged
 }
 
 fn get_empty_coords(grid: &Grid) -> Vec<Coord> {
