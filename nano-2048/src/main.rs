@@ -1,7 +1,4 @@
-use rand::{
-    prelude::SliceRandom,
-    rngs::ThreadRng,
-    thread_rng};
+use rand::{prelude::SliceRandom, rngs::ThreadRng, thread_rng};
 use std::io::{stdin, Error, ErrorKind};
 use std::ops::Range;
 
@@ -23,7 +20,9 @@ fn turn(grid: &mut Grid, gen: &mut ThreadRng) -> Result<u32, Error> {
         println!("Error: No more empty squares");
         return Err(Error::new(ErrorKind::Other, "No valid moves"));
     }
-    if merged{ add_new_cells(grid, N_NEW_SQUARES, gen);}
+    if merged {
+        add_new_cells(grid, N_NEW_SQUARES, gen);
+    }
     display_grid(grid);
     let base: u32 = 2;
     Ok(grid
@@ -89,9 +88,7 @@ fn read_input() -> Result<Direction, Error> {
         println!("Please input the move (w,a,s,d, x to exit):");
         let mut input = String::new();
 
-        stdin()
-            .read_line(&mut input)
-            .expect("Failed to read line");
+        stdin().read_line(&mut input).expect("Failed to read line");
 
         default = match input.trim() {
             "w" => Ok(Direction::Left),
@@ -152,7 +149,12 @@ fn merge_ability(mover: UVal, target: UVal) -> MoveResult {
     }
 }
 
-fn merge_cells(mut grid: &mut Grid, move_idx: Coord, tgt_idx: Coord, direction: &Direction) -> bool{
+fn merge_cells(
+    mut grid: &mut Grid,
+    move_idx: Coord,
+    tgt_idx: Coord,
+    direction: &Direction,
+) -> bool {
     if !move_idx.on_board() || !tgt_idx.on_board() {
         return false;
     }
@@ -173,14 +175,11 @@ fn merge_cells(mut grid: &mut Grid, move_idx: Coord, tgt_idx: Coord, direction: 
             merge_cells(&mut grid, tgt_idx, new_tgt_idx, direction);
             true
         }
-        _ => {
-            false
-        }
+        _ => false,
     }
 }
 
-fn step(mut grid: &mut Grid, direction: &Direction) -> bool
-{
+fn step(mut grid: &mut Grid, direction: &Direction) -> bool {
     let mut merged = false;
     match direction {
         Direction::Up => {
@@ -204,7 +203,6 @@ fn step(mut grid: &mut Grid, direction: &Direction) -> bool
                     };
                     let tgt_idx = move_idx.neighbor(direction);
                     merged |= merge_cells(&mut grid, move_idx, tgt_idx, direction);
-
                 }
             }
         }
